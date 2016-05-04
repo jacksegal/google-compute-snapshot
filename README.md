@@ -11,9 +11,9 @@
 * Only works for the primary disk on VM
 
 ## Setup
-* I run the script from cron: `0 05 * * * root sh /1/snapshot.sh >> /var/log/cron/snapshot.log 2>&1`
+* I run the script from cron.d: `0 05 * * * root sh /1/snapshot.sh >> /var/log/cron/snapshot.log 2>&1`
 * I created the `var/log/cron` directory for all of my cron outputs
-* I added the folder to logrotate: `/etc/logrotate.d/cron`
+* I added the `var/log/cron` directory folder to logrotate: `/etc/logrotate.d/cron`
 
 ```/var/log/cron/*.log {
      daily
@@ -24,3 +24,6 @@
      create 640 root adm
      sharedscripts
  }```
+ 
+ ## Downloading the script and opening in Windows?
+ * If you download the script and open it on a Windows machine, that may add windows character's to the file: https://github.com/Forward-Action/google-compute-snapshot/issues/1.

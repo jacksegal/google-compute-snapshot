@@ -25,5 +25,5 @@
      sharedscripts
  }```
  
- ## Downloading the script and opening in Windows?
+## Downloading the script and opening in Windows?
  * If you download the script and open it on a Windows machine, that may add windows character's to the file: https://github.com/Forward-Action/google-compute-snapshot/issues/1.

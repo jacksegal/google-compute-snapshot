@@ -6,6 +6,7 @@
 
 ## Prerequisite
 * cURL must be installed
+* The VM must have the sufficient gcloud permissions, including "compute" set to "enabled": http://stackoverflow.com/questions/31905966/gcloud-compute-list-networks-error-some-requests-did-not-succeed-insufficie#31928399
 
 ## Limitations
 * Only works for the primary disk on VM

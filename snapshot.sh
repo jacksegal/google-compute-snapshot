@@ -8,6 +8,9 @@ export PATH=$PATH:/usr/local/bin/:/usr/bin
 # get the device name for this vm
 DEVICE_NAME="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/disks/0/device-name" -H "Metadata-Flavor: Google")"
 
+# get the device id for this vm
+DEVICE_ID="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/id" -H "Metadata-Flavor: Google")"
+
 # get the zone that this vm is in
 INSTANCE_ZONE="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google")"
 
@@ -18,16 +21,15 @@ INSTANCE_ZONE="${INSTANCE_ZONE##*/}"
 DATE_TIME="$(date "+%Y%m%d%H%M%S")"
 
 # create the snapshot
-echo "$(gcloud compute disks snapshot ${DEVICE_NAME} --snapshot-names ${DEVICE_NAME}-${DATE_TIME} --zone ${INSTANCE_ZONE})"
-
+echo "$(gcloud compute disks snapshot ${DEVICE_NAME} --snapshot-names gcs-auto-bkup-${DEVICE_NAME}-${DEVICE_ID}-${DATE_TIME} --zone ${INSTANCE_ZONE})"
 
 
 #
 # DELETE OLD SNAPSHOTS (OLDER THAN 7 DAYS)
 #
 
-# get a list of existing snapshots
-SNAPSHOT_LIST="$(gcloud compute snapshots list --uri)"
+# get a list of existing snapshots, that were created by this process (gcs-auto-bkup), for this vm disk (DEVICE_ID)
+SNAPSHOT_LIST="$(gcloud compute snapshots list --regexp "(.*gcs-auto-bkup-.*)|(.*-${DEVICE_ID}-.*)" --uri)"
 
 # loop through the snapshots
 echo "${SNAPSHOT_LIST}" | while read line ; do
@@ -37,7 +39,7 @@ echo "${SNAPSHOT_LIST}" | while read line ; do
 
    # get the date that the snapshot was created
    SNAPSHOT_DATETIME="$(gcloud compute snapshots describe ${SNAPSHOT_NAME} | grep "creationTimestamp" | cut -d " " -f 2 | tr -d \')"
-   
+
    # format the date
    SNAPSHOT_DATETIME="$(date -d ${SNAPSHOT_DATETIME} +%Y%m%d)"
 
@@ -45,9 +47,9 @@ echo "${SNAPSHOT_LIST}" | while read line ; do
    SNAPSHOT_EXPIRY="$(date -d "-7 days" +"%Y%m%d")"
 
    # check if the snapshot is older than expiry date
-   if [ $SNAPSHOT_EXPIRY -ge $SNAPSHOT_DATETIME ]; 
+if [ $SNAPSHOT_EXPIRY -ge $SNAPSHOT_DATETIME ];
         then
 	 # delete the snapshot
          echo "$(gcloud compute snapshots delete ${SNAPSHOT_NAME} --quiet)"
-   fi   
+   fi
 done

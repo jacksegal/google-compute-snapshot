@@ -18,18 +18,18 @@ INSTANCE_ZONE="$(curl -s "http://metadata.google.internal/computeMetadata/v1/ins
 INSTANCE_ZONE="${INSTANCE_ZONE##*/}"
 
 # create a datetime stamp for filename
-DATE_TIME="$(date "+%Y%m%d%H%M%S")"
+DATE_TIME="$(date "+%s")"
 
 # create the snapshot
-echo "$(gcloud compute disks snapshot ${DEVICE_NAME} --snapshot-names gcs-auto-bkup-${DEVICE_NAME}-${DEVICE_ID}-${DATE_TIME} --zone ${INSTANCE_ZONE})"
+echo "$(gcloud compute disks snapshot ${DEVICE_NAME} --snapshot-names gcs-${DEVICE_NAME}-${DEVICE_ID}-${DATE_TIME} --zone ${INSTANCE_ZONE})"
 
 
 #
 # DELETE OLD SNAPSHOTS (OLDER THAN 7 DAYS)
 #
 
-# get a list of existing snapshots, that were created by this process (gcs-auto-bkup), for this vm disk (DEVICE_ID)
-SNAPSHOT_LIST="$(gcloud compute snapshots list --regexp "(.*gcs-auto-bkup-.*)|(.*-${DEVICE_ID}-.*)" --uri)"
+# get a list of existing snapshots, that were created by this process (gcs-), for this vm disk (DEVICE_ID)
+SNAPSHOT_LIST="$(gcloud compute snapshots list --regexp "(.*gcs-.*)|(.*-${DEVICE_ID}-.*)" --uri)"
 
 # loop through the snapshots
 echo "${SNAPSHOT_LIST}" | while read line ; do

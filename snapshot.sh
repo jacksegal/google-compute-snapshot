@@ -1,10 +1,38 @@
 #!/usr/bin/env bash
 export PATH=$PATH:/usr/local/bin/:/usr/bin
 
+usage() {
+  echo -e "\nUsage: $0 [-d <days>]" 1>&2
+  echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
+  echo -e "          Default if not set: 7 [OPTIONAL]"
+  exit 1
+}
+
+#
+# Get and set how long to keep snapshots. Default to 7 (days)
+#
+while getopts ":d:" o; do
+  case "${o}" in
+    d)
+      opt_d=${OPTARG}
+      ;;
+
+    *)
+      usage
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+if [[ -n $opt_d ]];then
+  OLDER_THAN=$opt_d
+else
+  OLDER_THAN=7
+fi
+
 #
 # CREATE DAILY SNAPSHOT
 #
-
 # get the device name for this vm
 DEVICE_NAME="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/disks/0/device-name" -H "Metadata-Flavor: Google")"
 
@@ -44,7 +72,7 @@ echo "${SNAPSHOT_LIST}" | while read line ; do
    SNAPSHOT_DATETIME="$(date -d ${SNAPSHOT_DATETIME} +%Y%m%d)"
 
    # get the expiry date for snapshot deletion (currently 7 days)
-   SNAPSHOT_EXPIRY="$(date -d "-7 days" +"%Y%m%d")"
+   SNAPSHOT_EXPIRY="$(date -d "-${OLDER_THAN} days" +"%Y%m%d")"
 
    # check if the snapshot is older than expiry date
 if [ $SNAPSHOT_EXPIRY -ge $SNAPSHOT_DATETIME ];

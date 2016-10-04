@@ -47,7 +47,7 @@
             rotate 14
             compress
             notifempty
-            create 640 root adm
+            create 664 root adm
             sharedscripts
         }
 

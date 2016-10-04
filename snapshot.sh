@@ -51,7 +51,8 @@ INSTANCE_ZONE="${INSTANCE_ZONE##*/}"
 DATE_TIME="$(date "+%s")"
 
 # create the snapshot
-echo "$(gcloud compute disks snapshot ${DEVICE_NAME} --snapshot-names gcs-${DEVICE_NAME}-${DEVICE_ID}-${DATE_TIME} --zone ${INSTANCE_ZONE})"
+echo -e "[$(date -Iseconds)] \c"
+echo -e "$(gcloud compute disks snapshot ${DEVICE_NAME} --snapshot-names gcs-${DEVICE_NAME}-${DEVICE_ID}-${DATE_TIME} --zone ${INSTANCE_ZONE})"
 
 
 #

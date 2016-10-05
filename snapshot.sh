@@ -78,9 +78,9 @@ echo "${SNAPSHOT_LIST}" | while read line ; do
    SNAPSHOT_EXPIRY="$(date -d "-${OLDER_THAN} days" +"%Y%m%d")"
 
    # check if the snapshot is older than expiry date
-if [ $SNAPSHOT_EXPIRY -ge $SNAPSHOT_DATETIME ];
-        then
-	 # delete the snapshot
-         echo "$(gcloud compute snapshots delete ${SNAPSHOT_NAME} --quiet)"
-   fi
+    if [ $SNAPSHOT_EXPIRY -ge $SNAPSHOT_DATETIME ];then
+      # delete the snapshot
+      echo -e "[$(date -Iseconds)] \c"
+      echo "$(gcloud compute snapshots delete ${SNAPSHOT_NAME})"
+    fi
 done

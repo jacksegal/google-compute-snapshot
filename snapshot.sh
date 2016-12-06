@@ -81,6 +81,6 @@ echo "${SNAPSHOT_LIST}" | while read line ; do
     if [ $SNAPSHOT_EXPIRY -ge $SNAPSHOT_DATETIME ];then
       # delete the snapshot
       echo -e "[$(date -Iseconds)] \c"
-      printf 'y\n' | gcloud compute snapshots delete ${SNAPSHOT_NAME}
+      echo "$(gcloud compute snapshots delete ${SNAPSHOT_NAME} -q)"
     fi
 done

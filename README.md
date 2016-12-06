@@ -30,33 +30,36 @@ ssh on to the server you wish to have backed up
 cd ~
 wget https://raw.githubusercontent.com/jacksegal/google-compute-snapshot/master/gcloud-snapshot.sh
 chmod +x gcloud-snapshot.sh
-mkdir -p /opt/google-compute-snapshot
+sudo mkdir -p /opt/google-compute-snapshot
 sudo mv gcloud-snapshot.sh /opt/google-compute-snapshot/
 ```
 
 **Setup CRON**: You should then setup a cron job in order to schedule a daily backup. Example cron:
 ```
-0 5 * * * root /opt/google-compute-snapshot/ebs-snapshot.sh >> /var/log/cron/snapshot.log 2>&1
+0 5 * * * root /opt/google-compute-snapshot/gcloud-snapshot.sh >> /var/log/cron/snapshot.log 2>&1
 ```
 
 **Manage CRON Output**: You should then create a directory for all cron outputs and add it to logrotate:
 
 - Create new directory:
 ``` 
-mkdir /var/log/cron 
+sudo mkdir /var/log/cron 
 ```
 - Create empty file for snapshot log:
 ```
-touch /var/log/cron/snapshot.log
+sudo touch /var/log/cron/snapshot.log
 ```
 - Change permissions on file:
 ```
-chgrp adm /var/log/cron/snapshot.log
-chmod 664 /var/log/cron/snapshot.log
+sudo chgrp adm /var/log/cron/snapshot.log
+sudo chmod 664 /var/log/cron/snapshot.log
 ```
-- Create new entry in logrotate so cron files don't get too big (it is a multi-line command - copy and paste all of it):
+- Create new entry in logrotate so cron files don't get too big :
 ```
-cat > /etc/logrotate.d/cron << EOF
+sudo nano /etc/logrotate.d/cron
+```
+- Add the following text to the above file:
+```
 /var/log/cron/*.log {
     daily
     missingok
@@ -66,12 +69,11 @@ cat > /etc/logrotate.d/cron << EOF
     create 664 root adm
     sharedscripts
 }
-EOF
 ```
 
 **To manually test the script:**
 ```
-sudo /opt/google-compute-snapshot/ebs-snapshot.sh
+sudo /opt/google-compute-snapshot/gcloud-snapshot.sh
 ```
 
 ## Snapshot Retention

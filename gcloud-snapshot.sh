@@ -61,7 +61,13 @@ setScriptOptions()
 
 getDeviceName()
 {
-    echo -e "$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/disks/0/device-name" -H "Metadata-Flavor: Google")"
+    local device_name="$(gcloud compute disks list --uri)"
+
+    # strip instance zone out of response
+    echo -e "${device_name##*/}"
+
+    # Previous Method of getting device-name from MetaData
+    #echo -e "$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/disks/0/device-name" -H "Metadata-Flavor: Google")"
 }
 
 

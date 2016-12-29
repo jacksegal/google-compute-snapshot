@@ -282,7 +282,7 @@ deleteSnapshotsWrapper()
 
         # delete snapshot
         if [ "${DELETION_CHECK}" -eq "1" ]; then
-           OUTPUT_SNAPSHOT_DELETION=$(deleteSnapshot) ${snapshot}
+           OUTPUT_SNAPSHOT_DELETION=$(deleteSnapshot ${snapshot})
         fi
 
     done

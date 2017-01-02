@@ -307,7 +307,7 @@ deleteSnapshotsWrapper()
 logTime "Start of Script"
 
 # set options from script input / default value
-setScriptOptions
+setScriptOptions "$@"
 
 # create snapshot
 createSnapshotWrapper

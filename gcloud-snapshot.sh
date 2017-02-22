@@ -61,9 +61,12 @@ setScriptOptions()
 
 getDeviceName()
 {
-    local device_name="$(gcloud compute disks list --uri)"
+    local vm_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")"
+    local device_name="$(gcloud compute disks list ${vm_name} --uri)"
 
-    # strip instance zone out of response
+    # local device_name="$(gcloud compute disks list --uri)"
+
+    # strip device name out of response
     echo -e "${device_name##*/}"
 
     # Previous Method of getting device-name from MetaData

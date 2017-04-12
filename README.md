@@ -36,10 +36,17 @@ sudo mkdir -p /opt/google-compute-snapshot
 sudo mv gcloud-snapshot.sh /opt/google-compute-snapshot/
 ```
 
-**Setup CRON**: You should then setup a cron job in order to schedule a daily backup. Example cron:
+**To manually test the script:**
+```
+sudo /opt/google-compute-snapshot/gcloud-snapshot.sh
+```
+
+**Setup CRON**: You should then setup a cron job in order to schedule a daily backup. Example cron for Debian based Linux:
 ```
 0 5 * * * root /opt/google-compute-snapshot/gcloud-snapshot.sh >> /var/log/cron/snapshot.log 2>&1
 ```
+
+Please note: the above command sends the output to a log file: `/var/log/cron/snapshot.log` - instructions for creating & managing the log file are below.
 
 **Manage CRON Output**: You should then create a directory for all cron outputs and add it to logrotate:
 
@@ -71,11 +78,6 @@ sudo nano /etc/logrotate.d/cron
     create 664 root adm
     sharedscripts
 }
-```
-
-**To manually test the script:**
-```
-sudo /opt/google-compute-snapshot/gcloud-snapshot.sh
 ```
 
 ## Snapshot Retention

@@ -278,7 +278,7 @@ deleteSnapshotsWrapper()
     DELETION_DATE=$(getSnapshotDeletionDate "${OLDER_THAN}")
 
     # get list of snapshots for regex - saved in global array
-    getSnapshots "(gcs-.*${DEVICE_ID}-.*)"
+    getSnapshots "gcs-.*${DEVICE_ID}-.*"
 
     # loop through snapshots
     for snapshot in "${SNAPSHOTS[@]}"

@@ -184,7 +184,7 @@ getSnapshotCreatedDate()
     local snapshot_datetime="$(gcloud compute snapshots describe $1 | grep "creationTimestamp" | cut -d " " -f 2 | tr -d \')"
 
     #  format date
-    echo -e "$(date -d ${snapshot_datetime} +%Y%m%d)"
+    echo -e "$(date -d ${snapshot_datetime%?????} +%Y%m%d)"
 }
 
 

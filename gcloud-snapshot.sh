@@ -63,8 +63,6 @@ getDeviceName()
 {
     local vm_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")"
     local device_name="$(gcloud compute disks list --filter="name=('${vm_name}')" --uri)"
-    # local device_name="$(gcloud compute disks list ${vm_name} --uri)"
-    # local device_name="$(gcloud compute disks list --uri)"
 
     # strip device name out of response
     echo -e "${device_name##*/}"
@@ -156,7 +154,6 @@ getSnapshots()
 
     # get list of snapshots from gcloud for this device
     local gcloud_response="$(gcloud compute snapshots list --filter="name~'"$1"'" --uri)"
-    # local gcloud_response="$(gcloud compute snapshots list --regexp "$1" --uri)"
 
     # loop through and get snapshot name from URI
     while read line
@@ -168,9 +165,6 @@ getSnapshots()
         SNAPSHOTS+=(${snapshot})
 
     done <<< "$(echo -e "$gcloud_response")"
-
-    # print out snapshots
-    #echo -e ${SNAPSHOTS[@]}
 }
 
 
@@ -186,7 +180,9 @@ getSnapshotCreatedDate()
 
     #  format date
     echo -e "$(date -d ${snapshot_datetime%?????} +%Y%m%d)"
-    # echo -e "$(date -d ${snapshot_datetime} +%Y%m%d)"
+    
+    # Previous Method of formatting date, which caused issues with older Centos
+    #echo -e "$(date -d ${snapshot_datetime} +%Y%m%d)"
 }
 
 
@@ -281,7 +277,6 @@ deleteSnapshotsWrapper()
 
     # get list of snapshots for regex - saved in global array
     getSnapshots "gcs-.*${DEVICE_ID}-.*"
-    # getSnapshots "(gcs-.*${DEVICE_ID}-.*)"
 
     # loop through snapshots
     for snapshot in "${SNAPSHOTS[@]}"

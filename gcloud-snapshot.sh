@@ -62,8 +62,8 @@ setScriptOptions()
 getDeviceName()
 {
     local vm_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")"
-    local device_name="$(gcloud compute disks list ${vm_name} --uri)"
-
+    local device_name="$(gcloud compute disks list --filter="name=('${vm_name}')" --uri)"
+    # local device_name="$(gcloud compute disks list ${vm_name} --uri)"
     # local device_name="$(gcloud compute disks list --uri)"
 
     # strip device name out of response
@@ -155,7 +155,8 @@ getSnapshots()
     SNAPSHOTS=()
 
     # get list of snapshots from gcloud for this device
-    local gcloud_response="$(gcloud compute snapshots list --regexp "$1" --uri)"
+    local gcloud_response="$(gcloud compute snapshots list --filter="name~'"$1"'" --uri)"
+    # local gcloud_response="$(gcloud compute snapshots list --regexp "$1" --uri)"
 
     # loop through and get snapshot name from URI
     while read line

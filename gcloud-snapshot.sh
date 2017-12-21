@@ -56,27 +56,24 @@ setScriptOptions()
 
 
 #
-# RETURNS DEVICE NAME
+# RETURNS INSTANCE NAME
 #
 
-getDeviceName()
+getInstanceName()
 {
-    local vm_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")"
-    local device_name="$(gcloud compute disks list --filter="name=('${vm_name}')" --uri)"
+    # get the name for this vm
+    local instance_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/hostname" -H "Metadata-Flavor: Google")"
 
-    # strip device name out of response
-    echo -e "${device_name##*/}"
-
-    # Previous Method of getting device-name from MetaData
-    #echo -e "$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/disks/0/device-name" -H "Metadata-Flavor: Google")"
+    # strip out the instance name from the fullly qualified domain name the google returns
+    echo -e "${instance_name%%.*}"
 }
 
 
 #
-# RETURNS DEVICE ID
+# RETURNS INSTANCE ID
 #
 
-getDeviceId()
+getInstanceId()
 {
     echo -e "$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/id" -H "Metadata-Flavor: Google")"
 }
@@ -92,6 +89,18 @@ getInstanceZone()
 
     # strip instance zone out of response
     echo -e "${instance_zone##*/}"
+}
+
+
+#
+# RETURNS LIST OF DEVICES
+#
+# input: ${INSTANCE_NAME}
+#
+
+getDeviceList()
+{
+    echo "$(gcloud compute disks list --filter users~$1 --format='value(name)')"
 }
 
 
@@ -144,7 +153,7 @@ createSnapshot()
 # GETS LIST OF SNAPSHOTS AND SETS GLOBAL ARRAY $SNAPSHOTS
 #
 # input: ${SNAPSHOT_REGEX}
-# example usage: getSnapshots "(gcs-.*${DEVICE_ID}-.*)"
+# example usage: getSnapshots "(gcs-.*${INSTANCE_ID}-.*)"
 #
 
 getSnapshots()
@@ -251,20 +260,27 @@ createSnapshotWrapper()
     # get date time
     DATE_TIME="$(date "+%s")"
 
-    # get the device name
-    DEVICE_NAME=$(getDeviceName)
+    # get the instance name
+    INSTANCE_NAME=$(getInstanceName)
 
     # get the device id
-    DEVICE_ID=$(getDeviceId)
+    INSTANCE_ID=$(getInstanceId)
 
     # get the instance zone
     INSTANCE_ZONE=$(getInstanceZone)
 
-    # create snapshot name
-    SNAPSHOT_NAME=$(createSnapshotName ${DEVICE_NAME} ${DEVICE_ID} ${DATE_TIME})
+    # get a list of all the devices
+    DEVICE_LIST=$(getDeviceList ${INSTANCE_NAME})
 
-    # create the snapshot
-    OUTPUT_SNAPSHOT_CREATION=$(createSnapshot ${DEVICE_NAME} ${SNAPSHOT_NAME} ${INSTANCE_ZONE})
+    # create the snapshots
+    echo "${DEVICE_LIST}" | while read DEVICE_NAME
+    do
+        # create snapshot name
+        SNAPSHOT_NAME=$(createSnapshotName ${DEVICE_NAME} ${INSTANCE_ID} ${DATE_TIME})        
+
+        # create the snapshot
+        OUTPUT_SNAPSHOT_CREATION=$(createSnapshot ${DEVICE_NAME} ${SNAPSHOT_NAME} ${INSTANCE_ZONE})
+    done
 }
 
 deleteSnapshotsWrapper()
@@ -276,7 +292,7 @@ deleteSnapshotsWrapper()
     DELETION_DATE=$(getSnapshotDeletionDate "${OLDER_THAN}")
 
     # get list of snapshots for regex - saved in global array
-    getSnapshots "gcs-.*${DEVICE_ID}-.*"
+    getSnapshots "gcs-.*${INSTANCE_ID}-.*"
 
     # loop through snapshots
     for snapshot in "${SNAPSHOTS[@]}"

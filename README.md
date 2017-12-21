@@ -7,10 +7,10 @@ Inspiration (and the installation instructions) taken from AWS script [aws-ec2-e
 ## How it works
 gcloud-snapshot.sh will:
 
-- Determine the device ID of the Google Compute Engine server on which the script runs
-- Get the Primary Disk ID attached to that instance
-- Take a snapshot of Disk
-- The script will then delete all associated snapshots taken by the script that are older than 7 days (optional: [default snapshot retention can be changed by using -d flag](#snapshot-retention))
+- Determine the Instance ID of the Google Compute Engine server on which the script runs
+- Get all the Disk IDs attached to that instance
+- Take a snapshot of each Disk
+- The script will then delete all associated snapshots taken by the script for the Instance that are older than 7 days (optional: [default snapshot retention can be changed by using -d flag](#snapshot-retention))
 
 
 ## Prerequisites
@@ -86,11 +86,3 @@ By default snapshots will be kept for 7 days, however they can be kept for longe
     
        -d  Number of days to keep snapshots. Snapshots older than this number deleted.
            Default if not set: 7 [OPTIONAL]
-
-## Limitations
-* Only works for the primary disk on VM
-
-
-## Downloading the script and opening in Windows?
-
-If you download the script and open it on a Windows machine, that may add windows character's to the file: https://github.com/Forward-Action/google-compute-snapshot/issues/1.

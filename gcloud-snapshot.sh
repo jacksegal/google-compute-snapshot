@@ -100,7 +100,7 @@ getInstanceZone()
 
 getDeviceList()
 {
-    echo "$(gcloud compute disks list --filter users~$1 --format='value(name)')"
+    echo "$(gcloud compute disks list --filter users~$1\$ --format='value(name)')"
 }
 
 

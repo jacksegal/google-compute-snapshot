@@ -19,12 +19,13 @@ export PATH=$PATH:/usr/local/bin/:/usr/bin
 #
 
 usage() {
-  echo -e "\nUsage: $0 [-d <days>]" 1>&2
-  echo -e "\nOptions:\n"
-  echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
-  echo -e "          Default if not set: 7 [OPTIONAL]"
-  echo -e "\n"
-  exit 1
+    echo -e "\nUsage: $0 [-d <days>] [-t <label_name>]" 1>&2
+    echo -e "\nOptions:\n"
+    echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
+    echo -e "          Default if not set: 7 [OPTIONAL]"
+    echo -e "    -t    Only back up disks that have this specified label with value set to 'true'."
+    echo -e "\n"
+    exit 1
 }
 
 
@@ -34,23 +35,31 @@ usage() {
 
 setScriptOptions()
 {
-    while getopts ":d:" o; do
-      case "${o}" in
-        d)
-          opt_d=${OPTARG}
-          ;;
-
-        *)
-          usage
-          ;;
-      esac
+    while getopts ":d:t:" o; do
+        case "${o}" in
+            d)
+                opt_d=${OPTARG}
+                ;;
+            t)
+                opt_t=${OPTARG}
+                ;;
+            *)
+                usage
+                ;;
+        esac
     done
     shift $((OPTIND-1))
 
     if [[ -n $opt_d ]];then
-      OLDER_THAN=$opt_d
+        OLDER_THAN=$opt_d
     else
-      OLDER_THAN=7
+        OLDER_THAN=7
+    fi
+
+    if [[ -n $opt_t ]];then
+        LABEL_CLAUSE="AND labels.$opt_t=true"
+    else
+        LABEL_CLAUSE=""
     fi
 }
 
@@ -100,7 +109,7 @@ getInstanceZone()
 
 getDeviceList()
 {
-    echo "$(gcloud compute disks list --filter users~$1\$ --format='value(name)')"
+    echo -e "$(gcloud compute disks list --filter "users~instances/$1\$ $LABEL_CLAUSE" --format='value(name)')"
 }
 
 
@@ -189,7 +198,7 @@ getSnapshotCreatedDate()
 
     #  format date
     echo -e "$(date -d ${snapshot_datetime%?????} +%Y%m%d)"
-    
+
     # Previous Method of formatting date, which caused issues with older Centos
     #echo -e "$(date -d ${snapshot_datetime} +%Y%m%d)"
 }
@@ -276,7 +285,7 @@ createSnapshotWrapper()
     echo "${DEVICE_LIST}" | while read DEVICE_NAME
     do
         # create snapshot name
-        SNAPSHOT_NAME=$(createSnapshotName ${DEVICE_NAME} ${INSTANCE_ID} ${DATE_TIME})        
+        SNAPSHOT_NAME=$(createSnapshotName ${DEVICE_NAME} ${INSTANCE_ID} ${DATE_TIME})
 
         # create the snapshot
         OUTPUT_SNAPSHOT_CREATION=$(createSnapshot ${DEVICE_NAME} ${SNAPSHOT_NAME} ${INSTANCE_ZONE})
@@ -305,7 +314,7 @@ deleteSnapshotsWrapper()
 
         # delete snapshot
         if [ "${DELETION_CHECK}" -eq "1" ]; then
-           OUTPUT_SNAPSHOT_DELETION=$(deleteSnapshot ${snapshot})
+            OUTPUT_SNAPSHOT_DELETION=$(deleteSnapshot ${snapshot})
         fi
 
     done

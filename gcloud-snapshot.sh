@@ -19,11 +19,14 @@ export PATH=$PATH:/usr/local/bin/:/usr/bin
 #
 
 usage() {
-    echo -e "\nUsage: $0 [-d <days>] [-t <label_name>]" 1>&2
+    echo -e "\nUsage: $0 [-d <days>] [-t <label_name>] [-i <instance_name>] [-i <instance_zone>]" 1>&2
     echo -e "\nOptions:\n"
     echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
     echo -e "          Default if not set: 7 [OPTIONAL]"
     echo -e "    -t    Only back up disks that have this specified label with value set to 'true'."
+    echo -e "    -i    Instance name to create backups for. If empty, makes backup for the calling"
+    echo -e "          host."
+    echo -e "    -z    Instance zone. If empty, uses the zone of the calling host."
     echo -e "\n"
     exit 1
 }
@@ -35,13 +38,19 @@ usage() {
 
 setScriptOptions()
 {
-    while getopts ":d:t:" o; do
+    while getopts ":d:t:i:z:" o; do
         case "${o}" in
             d)
                 opt_d=${OPTARG}
                 ;;
             t)
                 opt_t=${OPTARG}
+                ;;
+            i)
+                opt_i=${OPTARG}
+                ;;
+            z)
+                opt_z=${OPTARG}
                 ;;
             *)
                 usage
@@ -61,6 +70,18 @@ setScriptOptions()
     else
         LABEL_CLAUSE=""
     fi
+
+    if [[ -n $opt_i ]];then
+        OPT_INSTANCE_NAME=$opt_i
+    else
+        OPT_INSTANCE_NAME=""
+    fi
+
+    if [[ -n $opt_z ]];then
+        OPT_INSTANCE_ZONE=$opt_z
+    else
+        OPT_INSTANCE_ZONE=""
+    fi
 }
 
 
@@ -70,11 +91,15 @@ setScriptOptions()
 
 getInstanceName()
 {
-    # get the name for this vm
-    local instance_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/hostname" -H "Metadata-Flavor: Google")"
-
-    # strip out the instance name from the fullly qualified domain name the google returns
-    echo -e "${instance_name%%.*}"
+    if [[ -z "$OPT_INSTANCE_NAME" ]];then
+        # get the name for this vm
+        local instance_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/hostname" -H "Metadata-Flavor: Google")"
+    
+        # strip out the instance name from the fullly qualified domain name the google returns
+        echo -e "${instance_name%%.*}"
+    else
+        echo $OPT_INSTANCE_NAME
+    fi
 }
 
 
@@ -94,10 +119,14 @@ getInstanceId()
 
 getInstanceZone()
 {
-    local instance_zone="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google")"
-
-    # strip instance zone out of response
-    echo -e "${instance_zone##*/}"
+    if [[ -z "$OPT_INSTANCE_ZONE" ]];then
+        local instance_zone="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google")"
+    
+        # strip instance zone out of response
+        echo -e "${instance_zone##*/}"
+    else
+        echo $OPT_INSTANCE_ZONE
+    fi
 }
 
 
@@ -273,7 +302,8 @@ createSnapshotWrapper()
     INSTANCE_NAME=$(getInstanceName)
 
     # get the device id
-    INSTANCE_ID=$(getInstanceId)
+    # INSTANCE_ID=$(getInstanceId)
+    INSTANCE_ID="$(echo $INSTANCE_NAME | md5sum | cut -d' ' -f1)"
 
     # get the instance zone
     INSTANCE_ZONE=$(getInstanceZone)

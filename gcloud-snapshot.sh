@@ -112,7 +112,7 @@ getInstanceId()
     if [[ -z "$OPT_INSTANCE_NAME" ]];then    # no typo: only when querying for the calling machine get the real instance ID
         echo -e "$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/id" -H "Metadata-Flavor: Google")"
     else
-        echo $(echo $INSTANCE_NAME | md5 | cut -d' ' -f1)
+        echo $(echo $INSTANCE_NAME | md5sum | cut -d' ' -f1)
     fi
 }
 

@@ -87,7 +87,7 @@ By default snapshots will be kept for 7 days, however they can be kept for longe
        -d  Number of days to keep snapshots. Snapshots older than this number deleted.
            Default if not set: 7 [OPTIONAL]
 
-# Matching on specific disks
+## Matching on specific disks
 By default, snapshots will be created for all attached disks.  To only snapshot specific disks (ie. data volumes while skipping boot volumes), use the -t flag:
 
     Usage: ./snapshot.sh [-t <label>]

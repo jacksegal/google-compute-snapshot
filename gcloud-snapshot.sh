@@ -198,13 +198,13 @@ createSnapshot()
 # example usage: getSnapshots "(gcs-.*${INSTANCE_ID}-.*)"
 #
 
-getSnapshots()
+getSnapshotsForDeletion()
 {
     # create empty array
     SNAPSHOTS=()
 
     # get list of snapshots from gcloud for this device
-    local gcloud_response="$(gcloud compute snapshots list --filter="name~'"$1"'" --uri)"
+    local gcloud_response="$(gcloud compute snapshots list --filter="name~'"$1"' AND creationTimestamp<'$2'" --uri)"
 
     # loop through and get snapshot name from URI
     while read line
@@ -220,24 +220,6 @@ getSnapshots()
 
 
 #
-# RETURNS SNAPSHOT CREATED DATE
-#
-# input: ${SNAPSHOT_NAME}
-#
-
-getSnapshotCreatedDate()
-{
-    local snapshot_datetime="$(gcloud compute snapshots describe $1 | grep "creationTimestamp" | cut -d " " -f 2 | tr -d \')"
-
-    #  format date
-    echo -e "$(date -d ${snapshot_datetime%?????} +%Y%m%d)"
-
-    # Previous Method of formatting date, which caused issues with older Centos
-    #echo -e "$(date -d ${snapshot_datetime} +%Y%m%d)"
-}
-
-
-#
 # RETURNS DELETION DATE FOR ALL SNAPSHOTS
 #
 # input: ${OLDER_THAN}
@@ -246,25 +228,6 @@ getSnapshotCreatedDate()
 getSnapshotDeletionDate()
 {
     echo -e "$(date -d "-$1 days" +"%Y%m%d")"
-}
-
-
-#
-# RETURNS ANSWER FOR WHETHER SNAPSHOT SHOULD BE DELETED
-#
-# input: ${DELETION_DATE}, ${SNAPSHOT_CREATED_DATE}
-#
-
-checkSnapshotDeletion()
-{
-    if [ $1 -ge $2 ]
-
-        then
-            echo -e "1"
-        else
-            echo -e "2"
-
-    fi
 }
 
 
@@ -333,23 +296,14 @@ deleteSnapshotsWrapper()
     # get the deletion date for snapshots
     DELETION_DATE=$(getSnapshotDeletionDate "${OLDER_THAN}")
 
-    # get list of snapshots for regex - saved in global array
-    getSnapshots "gcs-.*${INSTANCE_ID}-.*"
+    # get list of snapshots for regex and that were created older that DELETION_DATE - saved in global array
+    getSnapshotsForDeletion "gcs-.*${INSTANCE_ID}-.*" "$DELETION_DATE"
 
     # loop through snapshots
     for snapshot in "${SNAPSHOTS[@]}"
     do
-        # get created date for snapshot
-        SNAPSHOT_CREATED_DATE=$(getSnapshotCreatedDate ${snapshot})
-
-        # check if snapshot needs to be deleted
-        DELETION_CHECK=$(checkSnapshotDeletion ${DELETION_DATE} ${SNAPSHOT_CREATED_DATE})
-
         # delete snapshot
-        if [ "${DELETION_CHECK}" -eq "1" ]; then
-            OUTPUT_SNAPSHOT_DELETION=$(deleteSnapshot ${snapshot})
-        fi
-
+        OUTPUT_SNAPSHOT_DELETION=$(deleteSnapshot ${snapshot})
     done
 }
 

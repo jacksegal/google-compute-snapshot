@@ -94,7 +94,7 @@ getInstanceName()
     if [[ -z "$OPT_INSTANCE_NAME" ]];then
         # get the name for this vm
         local instance_name="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/hostname" -H "Metadata-Flavor: Google")"
-    
+
         # strip out the instance name from the fullly qualified domain name the google returns
         echo -e "${instance_name%%.*}"
     else
@@ -112,7 +112,7 @@ getInstanceId()
     if [[ -z "$OPT_INSTANCE_NAME" ]];then    # no typo: only when querying for the calling machine get the real instance ID
         echo -e "$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/id" -H "Metadata-Flavor: Google")"
     else
-        echo $(echo $INSTANCE_NAME | md5sum | cut -d' ' -f1)
+        echo -e "$(gcloud -q compute instances describe $OPT_INSTANCE_NAME --zone=$INSTANCE_ZONE --format='value(id)')"
     fi
 }
 
@@ -125,7 +125,7 @@ getInstanceZone()
 {
     if [[ -z "$OPT_INSTANCE_ZONE" ]];then
         local instance_zone="$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google")"
-    
+
         # strip instance zone out of response
         echo -e "${instance_zone##*/}"
     else
@@ -305,11 +305,11 @@ createSnapshotWrapper()
     # get the instance name
     INSTANCE_NAME=$(getInstanceName)
 
-    # get the device id
-    INSTANCE_ID=$(getInstanceId)
-
     # get the instance zone
     INSTANCE_ZONE=$(getInstanceZone)
+
+    # get the device id
+    INSTANCE_ID=$(getInstanceId)
 
     # get a list of all the devices
     DEVICE_LIST=$(getDeviceList ${INSTANCE_NAME})

@@ -19,7 +19,7 @@ export PATH=$PATH:/usr/local/bin/:/usr/bin
 #
 
 usage() {
-    echo -e "\nUsage: $0 [-d <days>] [-t <label_name>] [-i <instance_name>] [-z <instance_zone>]" 1>&2
+    echo -e "\nUsage: $0 [-d <days>] [-t <label_name>] [-i <instance_name>] [-z <instance_zone>] [-p <prefix>]" 1>&2
     echo -e "\nOptions:\n"
     echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
     echo -e "          Default if not set: 7 [OPTIONAL]"
@@ -27,6 +27,7 @@ usage() {
     echo -e "    -i    Instance name to create backups for. If empty, makes backup for the calling"
     echo -e "          host."
     echo -e "    -z    Instance zone. If empty, uses the zone of the calling host."
+    echo -e "    -p    Prefix to be used for naming snapshots, default to 'gcs'"
     echo -e "\n"
     exit 1
 }
@@ -38,7 +39,7 @@ usage() {
 
 setScriptOptions()
 {
-    while getopts ":d:t:i:z:" o; do
+    while getopts ":d:t:i:z:p:" o; do
         case "${o}" in
             d)
                 opt_d=${OPTARG}
@@ -51,6 +52,9 @@ setScriptOptions()
                 ;;
             z)
                 opt_z=${OPTARG}
+                ;;
+            p)
+                opt_p=${OPTARG}
                 ;;
             *)
                 usage
@@ -81,6 +85,12 @@ setScriptOptions()
         OPT_INSTANCE_ZONE=$opt_z
     else
         OPT_INSTANCE_ZONE=""
+    fi
+
+    if [[ -n $opt_p ]];then
+        PREFIX=$opt_p
+    else
+        PREFIX="gcs"
     fi
 }
 
@@ -153,7 +163,7 @@ getDeviceList()
 createSnapshotName()
 {
     # create snapshot name
-    local name="gcs-$1-$2-$3"
+    local name="$PREFIX-$1-$2-$3"
 
     # google compute snapshot name cannot be longer than 62 characters
     local name_max_len=62
@@ -162,7 +172,7 @@ createSnapshotName()
     if [ ${#name} -ge ${name_max_len} ]; then
 
         # work out how many characters we require - prefix + device id + timestamp
-        local req_chars="gcs--$2-$3"
+        local req_chars="$PREFIX--$2-$3"
 
         # work out how many characters that leaves us for the device name
         local device_name_len=`expr ${name_max_len} - ${#req_chars}`
@@ -171,7 +181,7 @@ createSnapshotName()
         local device_name=${1:0:device_name_len}
 
         # create new (acceptable) snapshot name
-        name="gcs-${device_name}-$2-$3" ;
+        name="$PREFIX-${device_name}-$2-$3" ;
 
     fi
 
@@ -297,7 +307,7 @@ deleteSnapshotsWrapper()
     DELETION_DATE=$(getSnapshotDeletionDate "${OLDER_THAN}")
 
     # get list of snapshots for regex and that were created older that DELETION_DATE - saved in global array
-    getSnapshotsForDeletion "gcs-.*${INSTANCE_ID}-.*" "$DELETION_DATE"
+    getSnapshotsForDeletion "$PREFIX-.*${INSTANCE_ID}-.*" "$DELETION_DATE"
 
     # loop through snapshots
     for snapshot in "${SNAPSHOTS[@]}"

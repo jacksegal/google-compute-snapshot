@@ -100,6 +100,18 @@ Example: If you set the label to "auto_snapshot", only disks matching this key/v
 
     auto_snapshot=true
 
+Use -T for a more flexible way to specify the disks to snapshot.
+    Usage: ./gcloud-compute-snapshot.sh [-T <gcloud_filter_expression>]
+
+    Options:
+
+       -T    Only back up disks returned from querying with this filter. Uses gcloud filter expressions"
+             If both -t and -T are used, both terms are joined by the operator AND"
+
+Example: ./gcloud-compute-snapshot.sh -t auto_snapshot -T "sizeGb = 10 AND name: ubuntu". Attached disks matching this expression will be snapshotted
+
+    --format="labels.auto_snapshot=true AND sizeGb = 10 AND name: ubuntu"
+
 This also allows you to bake snapshotting into your Google images by setting a cron job with a label on every image you create, and then you can set a label on the volumes you want to
 snapshot in your infrastructure management tool (Terraform) to selectively snapshot them.
 

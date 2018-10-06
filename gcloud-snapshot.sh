@@ -19,11 +19,13 @@ export PATH=$PATH:/usr/local/bin/:/usr/bin
 #
 
 usage() {
-    echo -e "\nUsage: $0 [-d <days>] [-t <label_name>] [-i <instance_name>] [-z <instance_zone>] [-p <prefix>]" 1>&2
+    echo -e "\nUsage: $0 [-d <days>] [-t <label_name>] [-T <gcloud_filter_expression>] [-i <instance_name>] [-z <instance_zone>] [-p <prefix>]" 1>&2
     echo -e "\nOptions:\n"
     echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
     echo -e "          Default if not set: 7 [OPTIONAL]"
     echo -e "    -t    Only back up disks that have this specified label with value set to 'true'."
+    echo -e "    -T    Only back up disks returned from querying with this filter. Uses gcloud filter expressions"
+    echo -e "          If both -t and -T are used, both terms are joined by the operator AND"
     echo -e "    -i    Instance name to create backups for. If empty, makes backup for the calling"
     echo -e "          host."
     echo -e "    -z    Instance zone. If empty, uses the zone of the calling host."
@@ -39,13 +41,16 @@ usage() {
 
 setScriptOptions()
 {
-    while getopts ":d:t:i:z:p:" o; do
+    while getopts ":d:t:T:i:z:p:" o; do
         case "${o}" in
             d)
                 opt_d=${OPTARG}
                 ;;
             t)
                 opt_t=${OPTARG}
+                ;;
+            T)
+                opt_T=${OPTARG}
                 ;;
             i)
                 opt_i=${OPTARG}
@@ -73,6 +78,10 @@ setScriptOptions()
         LABEL_CLAUSE="AND labels.$opt_t=true"
     else
         LABEL_CLAUSE=""
+    fi
+
+    if [[ -n $opt_T ]];then
+        LABEL_CLAUSE="$LABEL_CLAUSE AND $opt_T"
     fi
 
     if [[ -n $opt_i ]];then

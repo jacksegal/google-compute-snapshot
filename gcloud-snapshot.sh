@@ -81,7 +81,7 @@ setScriptOptions()
     fi
 
     if [[ -n $opt_T ]];then
-        LABEL_CLAUSE="$LABEL_CLAUSE AND $opt_T"
+        FILTER_CLAUSE="$LABEL_CLAUSE AND $opt_T"
     fi
 
     if [[ -n $opt_i ]];then
@@ -161,7 +161,7 @@ getInstanceZone()
 
 getDeviceList()
 {
-    echo -e "$(gcloud compute disks list --filter "users~instances/$1\$ $LABEL_CLAUSE" --format='value(name)')"
+    echo -e "$(gcloud compute disks list --filter "users~instances/$1\$ $FILTER_CLAUSE" --format='value(name)')"
 }
 
 

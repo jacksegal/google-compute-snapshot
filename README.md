@@ -108,7 +108,7 @@ Use -T for a more flexible way to specify the disks to snapshot.
        -T    Only back up disks returned from querying with this filter. Uses gcloud filter expressions"
              If both -t and -T are used, both terms are joined by the operator AND"
 
-Example: ./gcloud-compute-snapshot.sh -t auto_snapshot -T "sizeGb = 10 AND name: ubuntu". Attached disks matching this expression will be snapshotted
+Example: `./gcloud-compute-snapshot.sh -t auto_snapshot -T "sizeGb = 10 AND name: ubuntu"`. Attached disks matching this expression will be snapshotted
 
     --format="labels.auto_snapshot=true AND sizeGb = 10 AND name: ubuntu"
 

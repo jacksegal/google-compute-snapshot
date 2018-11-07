@@ -298,19 +298,24 @@ createSnapshotWrapper()
 
     # get the instance name
     INSTANCE_NAME=$(getInstanceName)
+    echo -e "INSTANCE_NAME: $INSTANCE_NAME"
 
     # get the instance zone
     INSTANCE_ZONE=$(getInstanceZone)
+    echo -e "INSTANCE_ZONE: $INSTANCE_ZONE"
 
     # get the device id
     INSTANCE_ID=$(getInstanceId)
+    echo -e "INSTANCE_ID: $INSTANCE_ID"
 
     # get a list of all the devices
     DEVICE_LIST=$(getDeviceList ${INSTANCE_NAME})
+    echo -e "DEVICE_LIST: $DEVICE_LIST"
 
     # create the snapshots
     echo "${DEVICE_LIST}" | while read DEVICE_NAME
     do
+        echo -e "DEVICE_NAME: $DEVICE_NAME"
         # create snapshot name
         SNAPSHOT_NAME=$(createSnapshotName ${DEVICE_NAME} ${INSTANCE_ID} ${DATE_TIME})
 

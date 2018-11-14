@@ -68,6 +68,7 @@ Options:
           access to [OPTIONAL].
     -f    gcloud filter expression to query disk selection [OPTIONAL]
     -p    Prefix to be used for naming snapshots.
+          Max character length: 20
           Default if not set: 'gcs' [OPTIONAL]
     -a    Service Account to use. 
           Blank if not set [OPTIONAL]
@@ -130,13 +131,14 @@ By default snapshots are created with a prefix of `gcs`. To give a custom prefix
     Options:
     
        -p  Prefix to be used for naming snapshots.
+           Max character length: 20
            Default if not set: 'gcs' [OPTIONAL]
 
 For example:
 
     ./gcloud-snapshot.sh -p "my-snap"
 
-    (Note: Snapshot names are limited to 62 characters)
+    (Note: Snapshot prefixes are limited to 20 characters)
 
 ### Service Account
 By default snapshots are created with the default gcloud service account. To use a custom service account use the -a flag:

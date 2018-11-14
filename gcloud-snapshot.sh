@@ -28,6 +28,7 @@ usage() {
     echo -e "          access to [OPTIONAL]."
     echo -e "    -f    gcloud filter expression to query disk selection [OPTIONAL]"
     echo -e "    -p    Prefix to be used for naming snapshots."
+    echo -e "          Max character length: 20"
     echo -e "          Default if not set: 'gcs' [OPTIONAL]"
     echo -e "    -a    Service Account to use."
     echo -e "          Blank if not set [OPTIONAL]"
@@ -92,7 +93,12 @@ setScriptOptions()
 
     # Snapshot Prefix
     if [[ -n $opt_p ]]; then
-        PREFIX=$opt_p
+        # check if prefix is more than 20 chars
+        if [ ${#opt_p} -ge 20 ]; then
+            PREFIX=${opt_p:0:20}
+        else
+            PREFIX=$opt_p
+        fi
     else
         PREFIX="gcs"
     fi

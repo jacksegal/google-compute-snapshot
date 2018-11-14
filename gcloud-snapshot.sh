@@ -295,14 +295,24 @@ main()
     # get local instance name (blank if using remote instances)
     INSTANCE_NAME=$(getInstanceName)
 
-    # get list of all the devices that match filter
-    DEVICE_LIST=$(getDeviceList ${INSTANCE_NAME})
-
-    # dry run: output constants
+    # dry run: debug output
     if [ "$DRY_RUN" = true ]; then
         echo -e "[DEBUG]: DATE_TIME=$DATE_TIME"
         echo -e "[DEBUG]: DELETION_DATE=$DELETION_DATE"
         echo -e "[DEBUG]: INSTANCE_NAME=$INSTANCE_NAME"
+    fi
+
+    # get list of all the disks that match filter
+    DEVICE_LIST=$(getDeviceList ${INSTANCE_NAME})
+
+    # check if any disks were found
+    if [[ -z $DEVICE_LIST ]]; then
+        echo -e "[ERROR]: No disks were found - please check your script options / account permissions."
+        exit 1
+    fi
+
+    # dry run: debug disk output
+    if [ "$DRY_RUN" = true ]; then
         echo -e "[DEBUG]: DEVICE_LIST=$DEVICE_LIST"
     fi
 
@@ -318,7 +328,6 @@ main()
 
         # delete snapshots for this disk that were created older than DELETION_DATE
         deleteSnapshots "$PREFIX-.*" "$DELETION_DATE" "${device_id}"
-
     done
 
     logTime "End of google-compute-snapshot"

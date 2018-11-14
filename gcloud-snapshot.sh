@@ -117,12 +117,12 @@ setScriptOptions()
 
     # Debug - print variables
     if [ "$DRY_RUN" = true ]; then
-        echo -e "[DEBUG]: OLDER_THAN=$OLDER_THAN"
-        echo -e "[DEBUG]: REMOTE_CLAUSE=$REMOTE_CLAUSE"
-        echo -e "[DEBUG]: FILTER_CLAUSE=$FILTER_CLAUSE"
-        echo -e "[DEBUG]: PREFIX=$PREFIX"
-        echo -e "[DEBUG]: OPT_ACCOUNT=$OPT_ACCOUNT"
-        echo -e "[DEBUG]: DRY_RUN=$DRY_RUN"
+        printDebug "OLDER_THAN=${OLDER_THAN}"
+        printDebug "REMOTE_CLAUSE=${REMOTE_CLAUSE}"
+        printDebug "FILTER_CLAUSE=${FILTER_CLAUSE}"
+        printDebug "PREFIX=${PREFIX}"
+        printDebug "OPT_ACCOUNT=${OPT_ACCOUNT}"
+        printDebug "DRY_RUN=${DRY_RUN}"
     fi
 }
 
@@ -202,7 +202,7 @@ createSnapshotName()
 createSnapshot()
 {
     if [ "$DRY_RUN" = true ]; then
-        echo -e "[CMD]: gcloud $OPT_ACCOUNT compute disks snapshot $1 --snapshot-names $2 --zone $3"
+        printCmd "gcloud ${OPT_ACCOUNT} compute disks snapshot $1 --snapshot-names $2 --zone $3"
     else
         $(gcloud $OPT_ACCOUNT compute disks snapshot $1 --snapshot-names $2 --zone $3)
     fi
@@ -263,7 +263,7 @@ deleteSnapshots()
 deleteSnapshot()
 {
     if [ "$DRY_RUN" = true ]; then
-        echo -e "[CMD]: gcloud $OPT_ACCOUNT compute snapshots delete $1 -q"
+        printCmd "gcloud ${OPT_ACCOUNT} compute snapshots delete $1 -q"
     else
         $(gcloud $OPT_ACCOUNT compute snapshots delete $1 -q)
     fi
@@ -274,6 +274,21 @@ logTime()
 {
     local datetime="$(date +"%Y-%m-%d %T")"
     echo -e "[$datetime]: $1"
+}
+
+printDebug()
+{
+    echo -e "$(tput setab 4)[DEBUG]:$(tput sgr 0) $(tput setaf 4)${1}$(tput sgr 0)"
+}
+
+printError()
+{
+    echo -e "$(tput setab 1)[ERROR]:$(tput sgr 0) $(tput setaf 1)${1}$(tput sgr 0)"
+}
+
+printCmd()
+{
+    echo -e "$(tput setab 3)$(tput setaf 0)[CMD]:$(tput sgr 0) $(tput setaf 3)${1}$(tput sgr 0)"
 }
 
 
@@ -303,9 +318,9 @@ main()
 
     # dry run: debug output
     if [ "$DRY_RUN" = true ]; then
-        echo -e "[DEBUG]: DATE_TIME=$DATE_TIME"
-        echo -e "[DEBUG]: DELETION_DATE=$DELETION_DATE"
-        echo -e "[DEBUG]: INSTANCE_NAME=$INSTANCE_NAME"
+        printDebug "DATE_TIME=${DATE_TIME}"
+        printDebug "DELETION_DATE=${DELETION_DATE}"
+        printDebug "INSTANCE_NAME=${INSTANCE_NAME}"
     fi
 
     # get list of all the disks that match filter
@@ -313,13 +328,13 @@ main()
 
     # check if any disks were found
     if [[ -z $DEVICE_LIST ]]; then
-        echo -e "[ERROR]: No disks were found - please check your script options / account permissions."
+        printError "No disks were found - please check your script options / account permissions."
         exit 1
     fi
 
     # dry run: debug disk output
     if [ "$DRY_RUN" = true ]; then
-        echo -e "[DEBUG]: DEVICE_LIST=$DEVICE_LIST"
+        printDebug "DEVICE_LIST=${DEVICE_LIST}"
     fi
 
     # loop through the devices

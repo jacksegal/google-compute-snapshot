@@ -176,7 +176,7 @@ createSnapshotName()
         local device_name_len=`expr ${name_max_len} - ${#req_chars}`
 
         # shorten the device name
-        local device_name=${1:0:device_name_len}
+        local device_name=${2:0:device_name_len}
 
         # create new (acceptable) snapshot name
         name="$1-${device_name}-$3" ;

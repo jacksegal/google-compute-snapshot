@@ -167,7 +167,27 @@ getInstanceName()
 
 getDeviceList()
 {
-    echo -e "$(gcloud $OPT_ACCOUNT compute disks list $1 --filter "$FILTER_CLAUSE" --format='value(name,zone,id)' $OPT_PROJECT)"
+    # echo -e "$(gcloud $OPT_INSTANCE_SERVICE_ACCOUNT compute disks list --filter "users~instances/$1\$ $FILTER_CLAUSE" --format='value(name)')"
+    
+    local filter=""
+
+    # if using remote instances (-r), then no name filter is required
+    if [ "$REMOTE_CLAUSE" = true ]; then
+
+        # check if $FILTER_CLAUSE exists
+        if [[ ! -z $FILTER_CLAUSE ]]; then
+            filter="${FILTER_CLAUSE}"
+        fi
+    else
+        # check if $FILTER_CLAUSE exists
+        if [[ ! -z $FILTER_CLAUSE ]]; then
+            filter="name:$1 AND ${FILTER_CLAUSE}"
+        else
+            filter="name:$1"
+        fi
+    fi
+
+    echo -e "$(gcloud $OPT_ACCOUNT compute disks list --filter "${filter}" --format='value(name,zone,id)' $OPT_PROJECT)"
 }
 
 

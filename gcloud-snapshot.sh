@@ -181,9 +181,9 @@ getDeviceList()
     else
         # check if $FILTER_CLAUSE exists
         if [[ ! -z $FILTER_CLAUSE ]]; then
-            filter="name:$1 AND ${FILTER_CLAUSE}"
+            filter="users~instances/$1\$ AND ${FILTER_CLAUSE}"
         else
-            filter="name:$1"
+            filter="users~instances/$1\$"
         fi
     fi
 

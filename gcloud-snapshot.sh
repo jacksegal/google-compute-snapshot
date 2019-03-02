@@ -27,6 +27,7 @@ usage() {
     echo -e "    -r    Backup remote instances - takes snapshots of all disks calling instance has"
     echo -e "          access to [OPTIONAL]."
     echo -e "    -f    gcloud filter expression to query disk selection [OPTIONAL]"
+    echo -e "    -c    Copy disk labels to snapshot labels [OPTIONAL]"
     echo -e "    -p    Prefix to be used for naming snapshots."
     echo -e "          Max character length: 20"
     echo -e "          Default if not set: 'gcs' [OPTIONAL]"
@@ -47,7 +48,7 @@ usage() {
 
 setScriptOptions()
 {
-    while getopts ":d:rf:p:a:j:n" opt; do
+    while getopts ":d:rf:cp:a:j:n" opt; do
         case $opt in
             d)
                 opt_d=${OPTARG}
@@ -57,6 +58,9 @@ setScriptOptions()
                 ;;
             f)
                 opt_f=${OPTARG}
+                ;;
+            c)
+                opt_c=true
                 ;;
             p)
                 opt_p=${OPTARG}
@@ -127,6 +131,11 @@ setScriptOptions()
         DRY_RUN=$opt_n
     fi
 
+    # Copy Disk Labels to Snapshots
+    if [[ -n $opt_c ]]; then
+        COPY_LABELS=$opt_c
+    fi
+
     # Debug - print variables
     if [ "$DRY_RUN" = true ]; then
         printDebug "OLDER_THAN=${OLDER_THAN}"
@@ -136,6 +145,7 @@ setScriptOptions()
         printDebug "OPT_ACCOUNT=${OPT_ACCOUNT}"
         printDebug "OPT_PROJECT=${OPT_PROJECT}"
         printDebug "DRY_RUN=${DRY_RUN}"
+        printDebug "COPY_LABELS=${COPY_LABELS}"
     fi
 }
 
@@ -168,7 +178,7 @@ getInstanceName()
 getDeviceList()
 {
     # echo -e "$(gcloud $OPT_INSTANCE_SERVICE_ACCOUNT compute disks list --filter "users~instances/$1\$ $FILTER_CLAUSE" --format='value(name)')"
-    
+
     local filter=""
 
     # if using remote instances (-r), then no name filter is required
@@ -239,6 +249,16 @@ createSnapshot()
     else
         $(gcloud $OPT_ACCOUNT compute disks snapshot $1 --snapshot-names $2 --zone $3 ${OPT_PROJECT})
     fi
+}
+
+copyDiskLabels()
+{
+  labels=$(gcloud $OPT_ACCOUNT compute disks describe $1 --zone $3 --format='value[delimiter=","](labels)' ${OPT_PROJECT})
+  if [ "$DRY_RUN" = true ]; then
+      printCmd "gcloud $OPT_ACCOUNT compute snapshots add-labels $2 --labels=$labels ${OPT_PROJECT}"
+  else
+      $(gcloud $OPT_ACCOUNT compute snapshots add-labels $2 --labels=$labels ${OPT_PROJECT})
+  fi
 }
 
 
@@ -376,12 +396,18 @@ main()
 
         # build snapshot name
         local snapshot_name=$(createSnapshotName ${PREFIX} ${device_name} ${DATE_TIME})
-        
+
         # delete snapshots for this disk that were created older than DELETION_DATE
         deleteSnapshots "$PREFIX-.*" "$DELETION_DATE" "${device_id}"
 
         # create the snapshot
         createSnapshot ${device_name} ${snapshot_name} ${device_zone}
+
+        if [ "$COPY_LABELS" = true ]; then
+            # Copy labels
+            copyDiskLabels ${device_name} ${snapshot_name} ${device_zone}
+        fi
+
     done
 
     logTime "End of google-compute-snapshot"

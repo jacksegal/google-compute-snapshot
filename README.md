@@ -48,9 +48,19 @@ sudo /opt/google-compute-snapshot/gcloud-snapshot.sh
 ## Automation
 
 **Setup CRON**: You should setup a cron job in order to schedule a daily backup. Example cron for Debian based Linux:
+
+- Edit the system crontab:
 ```
-0 5 * * * sudo -u root /opt/google-compute-snapshot/gcloud-snapshot.sh > /dev/null 2>&1
+sudo nano /etc/crontab
 ```
+
+- Add the following line:
+```
+0 5 * * * root /opt/google-compute-snapshot/gcloud-snapshot.sh > /dev/null 2>&1
+```
+
+- Reload cron:
+`sudo service cron reload`
 
 If you'd like to save the output of the script to a log, see [Saving output to Log](#saving-output-to-log)
 
